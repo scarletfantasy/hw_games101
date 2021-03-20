@@ -2,7 +2,8 @@
 #include<eigen3/Eigen/Core>
 #include<eigen3/Eigen/Dense>
 #include<iostream>
-
+using namespace Eigen;
+using namespace std;
 int main(){
 
     // Basic Example of cpp
@@ -43,6 +44,20 @@ int main(){
     // matrix scalar multiply i * 2.0
     // matrix multiply i * j
     // matrix multiply vector i * v
+    cout<<"matrix"<<endl;
+    cout<<i+j<<endl;
+    cout<<i*2.0f<<endl;
+    cout<<i*j<<endl;
+    cout<<i*v<<endl;
+
+    Vector3f p(2.0f,1.0f,1.0f);
+    Matrix3f rot;
+    Vector3f off(1.0f,2.0f,0.0f);
+    float n=sqrt(2)/2;
+    rot<<n,-1*n,0,n,n,0,0,0,1;
+    auto prot=rot*p;
+    auto result= prot+off;
+    cout<<"result\n"<<result<<endl;
 
     return 0;
 }
