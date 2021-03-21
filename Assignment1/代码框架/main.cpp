@@ -26,7 +26,11 @@ Eigen::Matrix4f get_model_matrix(float rotation_angle)
     // TODO: Implement this function
     // Create the model matrix for rotating the triangle around the Z axis.
     // Then return it.
-
+    model<<cos(rotation_angle/180*MY_PI),-1.0f*sin(rotation_angle/180*MY_PI),0,0,
+    sin(rotation_angle/180*MY_PI),cos(rotation_angle/180*MY_PI),0,0,
+    0,0,1,0,
+    0,0,0,1;
+    
     return model;
 }
 
@@ -36,14 +40,30 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
     // Students will implement this function
 
     Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
-
+    projection<<1.0f/tan(eye_fov/2/180*MY_PI)/aspect_ratio,0,0,0,
+    0,1.0f/tan(eye_fov/2/180*MY_PI),0,0,
+    0,0,-(zFar+zNear)/(zFar-zNear),-2*(zNear*zFar)/(zFar-zNear),
+    0,0,-1,0;
     // TODO: Implement this function
     // Create the projection matrix for the given parameters.
     // Then return it.
 
     return projection;
 }
+Eigen::Matrix4f get_rotation(Vector3f axis, float angle)
+{
+    Eigen::Matrix4f rot_aa = Eigen::Matrix4f::Identity();
 
+    // TODO: Implement this function
+    // Create the model matrix for rotating the triangle around the Z axis.
+    // Then return it.
+    rot_aa<<cos(angle)+pow(axis.x(),2)*(1-cos(angle)),-sin(angle)*axis.z()+(1-cos(angle))*axis.x()*axis.y(),sin(angle)*axis.y()+(1-cos(angle))*axis.x()*axis.y(),0,
+    sin(angle)*axis.z()+(1-cos(angle))*axis.x()*axis.y(),cos(angle)+pow(axis.y(),2)*(1-cos(angle)),-sin(angle)*axis.x()+(1-cos(angle))*axis.y()*axis.z(),0,
+    -sin(angle)*axis.y()+(1-cos(angle))*axis.z()*axis.x(),sin(angle)*axis.x()+(1-cos(angle))*axis.y()*axis.z(),cos(angle)+pow(axis.z(),2)*(1-cos(angle)),0,
+    0,0,0,1;
+    
+    return rot_aa;
+}
 int main(int argc, const char** argv)
 {
     float angle = 0;
