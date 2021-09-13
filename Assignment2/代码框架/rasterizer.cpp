@@ -40,9 +40,26 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f)
 }
 
 
-static bool insideTriangle(int x, int y, const Vector3f* _v)
+static bool insideTriangle(float x, float y, const Vector3f* _v)
 {   
     // TODO : Implement this function to check if the point (x, y) is inside the triangle represented by _v[0], _v[1], _v[2]
+    Vector2f curpos=Vector2f(float(x),float(y));
+    Vector3f a1=Vector3f( _v[0].x()-_v[1].x(),_v[0].y()-_v[1].y(),0);
+    Vector3f a2=Vector3f(_v[0].x()-curpos.x(),_v[0].y()-curpos.y(),0);
+
+    Vector3f b1=Vector3f( _v[1].x()-_v[2].x(),_v[1].y()-_v[2].y(),0);
+    Vector3f b2=Vector3f(_v[1].x()-curpos.x(),_v[1].y()-curpos.y(),0);
+
+    Vector3f c1=Vector3f( _v[2].x()-_v[0].x(),_v[2].y()-_v[0].y(),0);
+    Vector3f c2=Vector3f(_v[2].x()-curpos.x(),_v[2].y()-curpos.y(),0);
+    float a=a1.cross(a2).z();
+    float b=b1.cross(b2).z();
+    float c=c1.cross(c2).z();
+    if((a>=0)&&(b>=0)&&(c>=0)||(a<=0)&&(b<=0)&&(c<=0))
+    {
+        return true;
+    }
+    return false;
 }
 
 static std::tuple<float, float, float> computeBarycentric2D(float x, float y, const Vector3f* v)
@@ -105,15 +122,55 @@ void rst::rasterizer::draw(pos_buf_id pos_buffer, ind_buf_id ind_buffer, col_buf
 //Screen space rasterization
 void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     auto v = t.toVector4();
+    int x1=std::floor(std::min(t.v[0].x(),std::min(t.v[1].x(),t.v[2].x())));
+    x1=x1<0?0:x1;
+    int x2=std::ceil(std::max(t.v[0].x(),std::max(t.v[1].x(),t.v[2].x())));
+    x2=x2>width-1?width-1:x2;
+    int y1=std::floor(std::min(t.v[0].y(),std::min(t.v[1].y(),t.v[2].y())));
+    y1=y1<0?0:y1;
+    int y2=std::ceil(std::max(t.v[0].y(),std::max(t.v[1].y(),t.v[2].y())));
+    y2=y2>width-1?width-1:y2;
+    printf("%f,%f,%f\n%f,%f,%f,\n%f,%f,%f,\n",v[0].x(),v[0].y(),0.0,v[1].x(),v[1].y(),0.0,v[2].x(),v[2].y(),0.0);
+    printf("%i %i %i %i %i %i\n",x1,x2,y1,y2,width,height);
     
+    int count =0;
+    for(int i=x1;i<=x2;++i)
+    {
+        for(int j=y1;j<=y2;++j)
+        {
+         
+            if(insideTriangle(i,j,t.v))
+            {
+                
+                auto[alpha, beta, gamma] = computeBarycentric2D(i, j, t.v);
+                float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+                float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+                z_interpolated *= w_reciprocal;
+                auto ind = (height-1-j)*width + i;
+                if(z_interpolated<depth_buf[ind])
+                {
+                    depth_buf[ind]=z_interpolated;
+                    set_pixel(Vector3f(i,j,0),t.getColor());
+                }
+                
+                ++count;
+                
+            }
+                
+            
+            
+        }
+    }
+    printf("in %f\n",float(count)/float(width*height));
+
     // TODO : Find out the bounding box of current triangle.
     // iterate through the pixel and find if the current pixel is inside the triangle
 
-    // If so, use the following code to get the interpolated z value.
-    //auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
-    //float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
-    //float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
-    //z_interpolated *= w_reciprocal;
+    //If so, use the following code to get the interpolated z value.
+    /* auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
+    float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+    float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+    z_interpolated *= w_reciprocal; */
 
     // TODO : set the current pixel (use the set_pixel function) to the color of the triangle (use getColor function) if it should be painted.
 }
@@ -138,6 +195,7 @@ void rst::rasterizer::clear(rst::Buffers buff)
     if ((buff & rst::Buffers::Color) == rst::Buffers::Color)
     {
         std::fill(frame_buf.begin(), frame_buf.end(), Eigen::Vector3f{0, 0, 0});
+        
     }
     if ((buff & rst::Buffers::Depth) == rst::Buffers::Depth)
     {
