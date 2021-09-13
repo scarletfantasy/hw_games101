@@ -89,11 +89,12 @@ namespace rst
         std::map<int, std::vector<Eigen::Vector3f>> pos_buf;
         std::map<int, std::vector<Eigen::Vector3i>> ind_buf;
         std::map<int, std::vector<Eigen::Vector3f>> col_buf;
-        std::map<int, std::vector<Eigen::Vector3f>> col_buf_util;
+        
 
         std::vector<Eigen::Vector3f> frame_buf;
-
+        std::vector<Eigen::Vector3f> frame_buf_util;
         std::vector<float> depth_buf;
+        std::vector<float> depth_buf_util;
         int get_index(int x, int y);
 
         int width, height;

@@ -138,25 +138,36 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     {
         for(int j=y1;j<=y2;++j)
         {
-         
-            if(insideTriangle(i,j,t.v))
+            Eigen::Vector3f fcolor=Eigen::Vector3f(0.0,0.0,0.0);
+            for(int dx=0;dx<=1;++dx)
             {
-                
-                auto[alpha, beta, gamma] = computeBarycentric2D(i, j, t.v);
-                float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
-                float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
-                z_interpolated *= w_reciprocal;
-                auto ind = (height-1-j)*width + i;
-                if(z_interpolated<depth_buf[ind])
+                for(int dy=0;dy<=1;++dy)
                 {
-                    depth_buf[ind]=z_interpolated;
-                    set_pixel(Vector3f(i,j,0),t.getColor());
+                    auto ind = (height*2-1-2*j-dy)*width*2 + 2*i+dx;
+                    if(insideTriangle(i+dx*0.5,j+dy*0.5,t.v))
+                    {
+                        
+                        auto[alpha, beta, gamma] = computeBarycentric2D(i+dx*0.5, j+dy*0.5, t.v);
+                        float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+                        float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+                        z_interpolated *= w_reciprocal;
+                        
+                        if(z_interpolated<depth_buf_util[ind])
+                        {
+                            depth_buf_util[ind]=z_interpolated;
+                            frame_buf_util[ind]=t.getColor();
+                            //set_pixel(Vector3f(i,j,0),t.getColor());
+                        }
+                        
+                        ++count;
+                        
+                    }
+                    fcolor+=frame_buf_util[ind];
                 }
-                
-                ++count;
-                
             }
-                
+            fcolor/=4.0;
+            //set_pixel(Vector3f(i,j,0),Eigen::Vector3f(255.0,255.0,255.0));
+            set_pixel(Vector3f(i,j,0),fcolor);
             
             
         }
@@ -201,12 +212,16 @@ void rst::rasterizer::clear(rst::Buffers buff)
     {
         std::fill(depth_buf.begin(), depth_buf.end(), std::numeric_limits<float>::infinity());
     }
+    std::fill(depth_buf_util.begin(), depth_buf_util.end(), std::numeric_limits<float>::infinity());
+    std::fill(frame_buf_util.begin(), frame_buf_util.end(), Eigen::Vector3f{0, 0, 0});
 }
 
 rst::rasterizer::rasterizer(int w, int h) : width(w), height(h)
 {
     frame_buf.resize(w * h);
     depth_buf.resize(w * h);
+    frame_buf_util.resize(w * h*4);
+    depth_buf_util.resize(w * h*4);
 }
 
 int rst::rasterizer::get_index(int x, int y)
