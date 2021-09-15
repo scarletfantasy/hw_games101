@@ -176,7 +176,6 @@ void rst::rasterizer::draw(std::vector<Triangle *> &TriangleList) {
     float f2 = (50 + 0.1) / 2.0;
 
     Eigen::Matrix4f mvp = projection * view * model;
-    std::cout << "2\n";
     for (const auto& t:TriangleList)
     {
         Triangle newtri = *t;
@@ -235,7 +234,6 @@ void rst::rasterizer::draw(std::vector<Triangle *> &TriangleList) {
         newtri.setColor(0, 148,121.0,92.0);
         newtri.setColor(1, 148,121.0,92.0);
         newtri.setColor(2, 148,121.0,92.0);
-        std::cout << "3\n";
         // Also pass view space vertice position
         rasterize_triangle(newtri, viewspace_pos);
     }
@@ -255,6 +253,7 @@ static Eigen::Vector2f interpolate(float alpha, float beta, float gamma, const E
     v /= weight;
 
     return Eigen::Vector2f(u, v);
+    
 }
 
 //Screen space rasterization
@@ -305,8 +304,6 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eig
             }
         }
     }
-    printf("in %f\n",float(count)/float(width*height));
-    std::cout<<"in"<<float(count)/float(width*height);
 
 
     // TODO: From your HW3, get the triangle rasterization code.
