@@ -99,11 +99,32 @@ Intersection BVHAccel::Intersect(const Ray& ray) const
     if (!root)
         return isect;
     isect = BVHAccel::getIntersection(root, ray);
+    //std::cout<<isect.happened<<"\n";
     return isect;
 }
 
 Intersection BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray) const
 {
     // TODO Traverse the BVH to find intersection
-
+    std::array<int, 3> dirisNeg = {int(ray.direction.x <0),int(ray.direction.y<0),int(ray.direction.z<0)};
+    auto inbound=node->bounds.IntersectP(ray,ray.direction_inv,dirisNeg);
+    Intersection intersect;
+    if(!inbound)
+        return intersect;
+    if((node->left==NULL)&&(node->right==NULL))
+    {
+        return node->object->getIntersection(ray);
+    }
+    auto lint=getIntersection(node->left,ray);
+    auto rint=getIntersection(node->right,ray);
+    if(lint.distance<rint.distance)
+    {
+        return lint;
+    }    
+    else
+    {
+        return rint;
+    }
+    
+    
 }
