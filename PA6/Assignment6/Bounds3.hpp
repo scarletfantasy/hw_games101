@@ -13,6 +13,7 @@ class Bounds3
 {
   public:
     Vector3f pMin, pMax; // two points to specify the bounding box
+    
     Bounds3()
     {
         double minNum = std::numeric_limits<double>::lowest();

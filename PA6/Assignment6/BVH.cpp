@@ -54,7 +54,45 @@ BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects)
             centroidBounds =
                 Union(centroidBounds, objects[i]->getBounds().Centroid());
         int dim = centroidBounds.maxExtent();
-        switch (dim) {
+        std::sort(objects.begin(), objects.end(), [&dim](auto f1, auto f2) {
+                auto f1v=f1->getBounds().Centroid();
+                auto f2v=f2->getBounds().Centroid();
+                return (float)*(((float*)&(f1v))+dim) <
+                       (float)*(((float*)&(f2v))+dim);
+            });
+        auto pbegin=(float)*(((float*)&(centroidBounds.pMin))+dim);
+        auto pend=(float)*(((float*)&(centroidBounds.pMax))+dim);
+        double curmin=std::numeric_limits<double>::max();
+        double p=pbegin;
+        int finalcount=0;
+        for(auto i=pbegin;i<=pend;i+=(pend-pbegin)/8.0f)
+        {
+            double left=0.0f;
+            double right=0.0f;
+            int count=0;
+            for(auto iter:objects)
+            {
+                auto curcenter=iter->getBounds().Centroid();
+                auto mydimp=(float)*(((float*)&(curcenter))+dim);
+                if(mydimp<=i)
+                {
+                    left+=iter->getBounds().SurfaceArea();
+                    count++;
+                }
+                else{
+                    right+=iter->getBounds().SurfaceArea();
+                }
+            }
+            auto curres=left*count+right*(objects.size()-count);
+            if(curres<curmin)
+            {
+                curmin=curres;
+                finalcount=count;
+                p=i;
+            }
+        }
+
+        /* switch (dim) {
         case 0:
             std::sort(objects.begin(), objects.end(), [](auto f1, auto f2) {
                 return f1->getBounds().Centroid().x <
@@ -74,10 +112,12 @@ BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects)
             });
             break;
         }
-
+ */
         auto beginning = objects.begin();
-        auto middling = objects.begin() + (objects.size() / 2);
+        //auto middling = objects.begin() + (objects.size() / 2);
+        auto middling = objects.begin() + finalcount;
         auto ending = objects.end();
+
 
         auto leftshapes = std::vector<Object*>(beginning, middling);
         auto rightshapes = std::vector<Object*>(middling, ending);
