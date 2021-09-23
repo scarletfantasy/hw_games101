@@ -76,7 +76,7 @@ void Renderer::Render(const Scene& scene)
     
 
     // change the spp value to change sample ammount
-    int spp = 128;
+    int spp = 32;
     
     int numthreads=std::thread::hardware_concurrency();
     int groupsize=scene.height/numthreads;
